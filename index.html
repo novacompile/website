@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaCompile — AI-Powered Runtime Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        nova: {
+                            50: '#f5f7ff',
+                            100: '#ecefff',
+                            200: '#d6dcff',
+                            300: '#b3bdff',
+                            400: '#8a94ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                            950: '#1e1b4b',
+                        },
+                        slate: {
+                            850: '#151b2e',
+                            950: '#020617',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'gradient': 'gradient 8s ease infinite',
+                        'slide-up': 'slideUp 0.6s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        gradient: {
+                            '0%, 100%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(30px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #020617;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+        }
+        
+        .glass-strong {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #6366f1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .code-block {
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.05), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        
+        .step-number {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        }
+        
+        .feature-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.15);
+        }
+        
+        .syntax-keyword { color: #c084fc; }
+        .syntax-string { color: #86efac; }
+        .syntax-comment { color: #64748b; }
+        .syntax-func { color: #93c5fd; }
+        .syntax-var { color: #fca5a5; }
+        .syntax-num { color: #fdba74; }
+        
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .scroll-reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .nav-link {
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-secondary {
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            border-color: rgba(99, 102, 241, 0.6);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .grid-bg {
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-strong">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-nova-500 to-purple-600 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <span class="text-xl font-bold tracking-tight text-white">Nova<span class="text-nova-400">Compile</span></span>
+            </div>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#features" class="nav-link text-sm font-medium text-slate-300 hover:text-white transition-colors">Features</a>
+                <a href="#quickstart" class="nav-link text-sm font-medium text-slate-300 hover:text-white transition-colors">Quick Start</a>
+                <a href="#syntax" class="nav-link text-sm font-medium text-slate-300 hover:text-white transition-colors">Syntax</a>
+                <a href="#docs" class="nav-link text-sm font-medium text-slate-300 hover:text-white transition-colors">Docs</a>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="https://github.com" target="_blank" class="hidden md:flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    GitHub
+                </a>
+                <a href="#quickstart" class="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold text-white">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden grid-bg">
+        <div class="hero-glow top-1/4 left-1/4 animate-pulse-slow"></div>
+        <div class="hero-glow bottom-1/4 right-1/4 animate-pulse-slow" style="animation-delay: 2s;"></div>
+        
+        <div class="relative z-10 max-w-7xl mx-auto px-6 text-center">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-slide-up">
+                <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                <span class="text-sm font-medium text-slate-300">Powered by Groq Cloud Infrastructure</span>
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6 animate-slide-up" style="animation-delay: 0.1s;">
+                <span class="text-white">Write in</span>
+                <span class="gradient-text">Nova.</span><br>
+                <span class="text-white">Run in</span>
+                <span class="text-slate-500">Python.</span>
+            </h1>
+            
+            <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed animate-slide-up" style="animation-delay: 0.2s;">
+                An AI-powered runtime engine and transpiler that translates unstructured text, pseudo-code, and custom <code class="text-nova-400 font-mono">.no</code> files into production-ready Python code on the fly.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up" style="animation-delay: 0.3s;">
+                <a href="#quickstart" class="btn-primary px-8 py-4 rounded-xl text-base font-semibold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Start Building
+                </a>
+                <a href="#syntax" class="btn-secondary px-8 py-4 rounded-xl text-base font-semibold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    View Demo
+                </a>
+            </div>
+
+            <!-- Code Preview -->
+            <div class="mt-20 max-w-3xl mx-auto animate-slide-up" style="animation-delay: 0.4s;">
+                <div class="code-block rounded-2xl p-6 text-left overflow-hidden">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                        <span class="ml-4 text-xs text-slate-500 font-mono">script.no</span>
+                    </div>
+                    <pre class="font-mono text-sm leading-relaxed overflow-x-auto"><code><span class="syntax-comment">// Define some basic variables</span>
+<span class="syntax-var">username</span> <span class="syntax-keyword">make</span> <span class="syntax-string">"James"</span>
+<span class="syntax-var">counter</span> <span class="syntax-keyword">is</span> <span class="syntax-num">5</span>
+
+<span class="syntax-comment">// Run a structural loop</span>
+<span class="syntax-keyword">loop</span> <span class="syntax-num">3</span> <span class="syntax-keyword">times</span>
+    <span class="syntax-func">add</span> <span class="syntax-num">2</span> <span class="syntax-keyword">to</span> <span class="syntax-var">counter</span>
+    <span class="syntax-func">display</span> <span class="syntax-keyword">text</span> <span class="syntax-string">"User logged in: "</span> <span class="syntax-keyword">and then show</span> <span class="syntax-var">username</span>
+    <span class="syntax-func">print</span> <span class="syntax-string">"Current count value is: "</span> + <span class="syntax-var">counter</span></code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-32 relative">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20 scroll-reveal">
+                <h2 class="text-3xl md:text-5xl font-bold text-white mb-4">Built for Speed</h2>
+                <p class="text-slate-400 text-lg max-w-xl mx-auto">Leveraging Groq Cloud's inference infrastructure for instant transpilation from pseudo-code to Python.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="feature-card glass rounded-2xl p-8 scroll-reveal">
+                    <div class="w-12 h-12 rounded-xl bg-nova-500/10 flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-nova-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Instant Transpilation</h3>
+                    <p class="text-slate-400 leading-relaxed">Translates your <code class="text-nova-400">.no</code> files into production-ready Python code in milliseconds using Groq's ultra-fast inference.</p>
+                </div>
+                
+                <div class="feature-card glass rounded-2xl p-8 scroll-reveal" style="transition-delay: 0.1s;">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Natural Syntax</h3>
+                    <p class="text-slate-400 leading-relaxed">Write in plain English or simplified pseudo-code. NovaCompile understands intent and generates clean, idiomatic Python.</p>
+                </div>
+                
+                <div class="feature-card glass rounded-2xl p-8 scroll-reveal" style="transition-delay: 0.2s;">
+                    <div class="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Zero Dependencies</h3>
+                    <p class="text-slate-400 leading-relaxed">Only requires the lightweight <code class="text-nova-400">requests</code> library. No heavy SDKs or complex setup required.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section id="quickstart" class="py-32 relative">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="text-center mb-16 scroll-reveal">
+                <h2 class="text-3xl md:text-5xl font-bold text-white mb-4">Quick Start</h2>
+                <p class="text-slate-400 text-lg">Three simple steps to get NovaCompile running in your environment.</p>
+            </div>
+            
+            <div class="space-y-8">
+                <!-- Step 1 -->
+                <div class="glass rounded-2xl p-8 md:p-10 scroll-reveal">
+                    <div class="flex items-start gap-6">
+                        <div class="step-number w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0">1</div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-semibold text-white mb-2">Set Up Your Environment</h3>
+                            <p class="text-slate-400 mb-4">Export your Groq Cloud API key into your terminal profile.</p>
+                            <div class="code-block rounded-xl p-4 font-mono text-sm">
+                                <code class="text-slate-300">export GROQ_API_KEY=<span class="syntax-string">"your-actual-groq-api-key-here"</span></code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 2 -->
+                <div class="glass rounded-2xl p-8 md:p-10 scroll-reveal">
+                    <div class="flex items-start gap-6">
+                        <div class="step-number w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0">2</div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-semibold text-white mb-2">Install Dependencies</h3>
+                            <p class="text-slate-400 mb-4">The compiler uses the lightweight Python <code class="text-nova-400">requests</code> library for network handshakes.</p>
+                            <div class="code-block rounded-xl p-4 font-mono text-sm">
+                                <code class="text-slate-300">pip install requests</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 3 -->
+                <div class="glass rounded-2xl p-8 md:p-10 scroll-reveal">
+                    <div class="flex items-start gap-6">
+                        <div class="step-number w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0">3</div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-semibold text-white mb-2">Create the Nova Shortcut</h3>
+                            <p class="text-slate-400 mb-4">Register a local workspace alias for the <code class="text-nova-400">nova</code> command.</p>
+                            <div class="code-block rounded-xl p-4 font-mono text-sm">
+                                <code class="text-slate-300">alias nova=<span class="syntax-string">"python $(pwd)/src/transpiler.py"</span></code>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-3">💡 To make this permanent, append the alias to your <code class="text-slate-400">~/.bashrc</code> or <code class="text-slate-400">~/.zshrc</code> profile.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Syntax Demo Section -->
+    <section id="syntax" class="py-32 relative">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="scroll-reveal">
+                    <h2 class="text-3xl md:text-5xl font-bold text-white mb-6">Natural Language.<br>Real Python.</h2>
+                    <p class="text-slate-400 text-lg mb-8 leading-relaxed">Write code the way you think. NovaCompile interprets simplified syntax and translates it into clean, executable Python using Groq's LLM inference.</p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-8 h-8 rounded-lg bg-nova-500/10 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-nova-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <span class="text-slate-300">Human-readable variable assignment</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-8 h-8 rounded-lg bg-nova-500/10 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-nova-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <span class="text-slate-300">Intuitive loop structures</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-8 h-8 rounded-lg bg-nova-500/10 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-nova-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <span class="text-slate-300">Built-in display and print helpers</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="scroll-reveal">
+                    <div class="code-block rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                            </div>
+                            <span class="text-xs text-slate-500 font-mono">script.no</span>
+                        </div>
+                        <pre class="font-mono text-sm leading-relaxed overflow-x-auto"><code><span class="syntax-comment">// Define some basic variables</span>
+<span class="syntax-var">username</span> <span class="syntax-keyword">make</span> <span class="syntax-string">"James"</span>
+<span class="syntax-var">counter</span> <span class="syntax-keyword">is</span> <span class="syntax-num">5</span>
+
+<span class="syntax-comment">// Run a structural loop</span>
+<span class="syntax-keyword">loop</span> <span class="syntax-num">3</span> <span class="syntax-keyword">times</span>
+    <span class="syntax-func">add</span> <span class="syntax-num">2</span> <span class="syntax-keyword">to</span> <span class="syntax-var">counter</span>
+    <span class="syntax-func">display</span> <span class="syntax-keyword">text</span> <span class="syntax-string">"User logged in: "</span> <span class="syntax-keyword">and then show</span> <span class="syntax-var">username</span>
+    <span class="syntax-func">print</span> <span class="syntax-string">"Current count value is: "</span> + <span class="syntax-var">counter</span></code></pre>
+                        
+                        <div class="mt-6 pt-6 border-t border-slate-700/50">
+                            <div class="flex items-center gap-2 mb-3">
+                                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                <span class="text-xs text-slate-400 font-mono">Terminal</span>
+                            </div>
+                            <div class="font-mono text-sm text-slate-300">
+                                <span class="text-green-400">$</span> nova script.no<br>
+                                <span class="text-slate-500">User logged in: James</span><br>
+                                <span class="text-slate-500">Current count value is: 7</span><br>
+                                <span class="text-slate-500">User logged in: James</span><br>
+                                <span class="text-slate-500">Current count value is: 9</span><br>
+                                <span class="text-slate-500">User logged in: James</span><br>
+                                <span class="text-slate-500">Current count value is: 11</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-32 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-nova-950/20 to-transparent"></div>
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10 scroll-reveal">
+            <h2 class="text-4xl md:text-6xl font-bold text-white mb-6">Ready to compile?</h2>
+            <p class="text-slate-400 text-lg mb-10 max-w-xl mx-auto">Start writing in Nova syntax today and let AI handle the translation to production Python.</p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="#quickstart" class="btn-primary px-8 py-4 rounded-xl text-base font-semibold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Get Started Now
+                </a>
+                <a href="https://console.groq.com" target="_blank" class="btn-secondary px-8 py-4 rounded-xl text-base font-semibold text-white">
+                    Get Groq API Key →
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/50 py-12">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-nova-500 to-purple-600 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <span class="text-lg font-bold text-white">Nova<span class="text-nova-400">Compile</span></span>
+            </div>
+            <div class="flex items-center gap-8 text-sm text-slate-400">
+                <a href="#" class="hover:text-white transition-colors">Documentation</a>
+                <a href="#" class="hover:text-white transition-colors">GitHub</a>
+                <a href="#" class="hover:text-white transition-colors">Groq Cloud</a>
+            </div>
+            <p class="text-sm text-slate-600">Powered by Groq Cloud Infrastructure</p>
+        </div>
+    </footer>
+
+    <script>
+        // Scroll reveal animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Navbar background on scroll
+        const nav = document.querySelector('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow-lg', 'shadow-nova-500/5');
+            } else {
+                nav.classList.remove('shadow-lg', 'shadow-nova-500/5');
+            }
+        });
+    </script>
+</body>
+</html>
